@@ -1,0 +1,90 @@
+---
+title: "Influential factors of days spent at the shelter"
+author: "Hanfan Chen 2703334C, Zhaohao Li 2611602L, Zhenhao Qiao 2612824Q, Chao Wang 2518608W, RachaelWatson 2195719W"
+output:
+  pdf_document:
+    number_sections: yes
+fig_caption: yes
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(eval = T, echo = FALSE, comment = NA, message = FALSE, warning = FALSE)
+```
+
+# Introduction
+
+```{r library}
+library(ggplot2)
+library(GGally)
+```
+
+# Exploratory Data Analysis
+```{r read the data}
+data10 <- read.csv("dataset10.csv")
+head(data10)
+```
+
+```{r}
+for (i in 1:6) {
+  cat("Column", i,":")
+  print(levels(as.factor(data10[,i])))
+  cat("\n")
+}
+```
+
+```{r}
+zero_data <- subset(data10, time_at_shelter == 0)
+nrow(zero_data)
+```
+
+```{r hist of y, fig.cap = "\\label{fig:y_hist} The histogram of day time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
+ggplot(data10, mapping = aes(x = time_at_shelter)) + 
+  geom_histogram(bins = 25)
+```
+
+
+# Formal Data Analysis
+
+# Conclusions {#sec:Conc}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
