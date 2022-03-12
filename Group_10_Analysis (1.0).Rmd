@@ -16,6 +16,8 @@ knitr::opts_chunk$set(eval = T, echo = FALSE, comment = NA, message = FALSE, war
 ```{r library}
 library(ggplot2)
 library(GGally)
+library(tidyverse)
+library(kableExtra)
 ```
 
 # Exploratory Data Analysis
@@ -42,6 +44,24 @@ ggplot(data10, mapping = aes(x = time_at_shelter)) +
   geom_histogram(bins = 25)
 ```
 
+```{r pair plots, fig.cap = "\\label{fig:pairs} Pair plots of the variables", fig.width = 10, fig.align = "center", fig.pos = "H"}
+ggpairs(data10,
+upper=list(continuous=wrap("points", alpha=0.4)),
+lower="blank", axisLabels="none")
+```
+
+This is just so you can see that there's no overlap between the months and years.
+```{r}
+data10 %>% 
+  filter(year==2016) %>% 
+  select(month) %>% 
+  unique()
+
+data10 %>% 
+  filter(year==2017) %>% 
+  select(month) %>% 
+  unique()
+```
 
 # Formal Data Analysis
 
