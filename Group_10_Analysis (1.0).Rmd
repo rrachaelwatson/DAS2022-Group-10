@@ -50,6 +50,33 @@ upper=list(continuous=wrap("points", alpha=0.4)),
 lower="blank", axisLabels="none")
 ```
 
+```{r bar plot 1, fig.cap = "\\label{fig:bar1} Option 1: Bar plot of outcome type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
+ggplot(data10, aes(x=outcome_type, y=time_at_shelter, colour=outcome_type, fill=outcome_type)) +
+  geom_col() +
+  labs(x="Outcome Type", y="Time at Shelter")
+```
+
+```{r bar plot 2, fig.cap = "\\label{fig:bar2} Option 2: Bar plot of outcome type vs count", fig.width = 10, fig.align = "center", fig.pos = "H"}
+count <- data10 %>% 
+  group_by(outcome_type) %>% 
+  summarise(count = n())
+
+ggplot(count, aes(x=outcome_type, y=count, colour=outcome_type, fill=outcome_type))+
+  geom_col() +
+  labs(x="Outcome Type", y="Count")
+```
+
+```{r bar plot 3, fig.cap = "\\label{fig:bar3} Option 3: Bar plot of outcome type vs max time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
+max <- data10 %>% 
+  select(outcome_type, time_at_shelter) %>% 
+  group_by(outcome_type) %>% 
+  summarise(max = max(time_at_shelter))
+
+ggplot(max, aes(x=outcome_type, y=max, colour=outcome_type, fill=outcome_type))+
+  geom_col() +
+  labs(x="Outcome Type", y="Max Time at Shelter")
+```
+
 This is just so you can see that there's no overlap between the months and years.
 ```{r}
 data10 %>% 
