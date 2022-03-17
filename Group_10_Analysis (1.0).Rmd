@@ -40,10 +40,9 @@ data10[,3] <- as.factor(data10[,3])
 All the explanatory variable are categorical variable and each explanatory variable have multiple levels.
 
 ```{r}
-zero_data <- subset(data10, time_at_shelter == 0)
-nrow(zero_data)
+sum(data10$time_at_shelter == 0)
 ```
-Excess zeros in raw data may cause overdispersion in Poisson regression. The hurdle model is suggested to fit.
+Over 300 zeros in raw data may cause overdispersion in Poisson regression. The hurdle model is suggested to fit.
 
 ```{r hist of y, fig.cap = "\\label{fig:y_hist} The histogram of day time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 ggplot(data10, mapping = aes(x = time_at_shelter)) + 
@@ -52,12 +51,12 @@ ggplot(data10, mapping = aes(x = time_at_shelter)) +
 Figure \ref{fig:y_hist} displays the histogram of the response variable, which is days time in the shelter. The histogram shows evidence of right-skewed and Poisson distribution of the response variable.
 
 ```{r pair plots, fig.cap = "\\label{fig:pairs} Pair plots of the variables", fig.width = 10, fig.align = "center", fig.pos = "H"}
-ggpairs(data10,
-lower="blank", axisLabels="none")
+ggpairs(data10, lower="blank", axisLabels="none")
 ```
 Note that year and month are strongly correlated, suggesting multicollinearity. As the data were collected over the period of a year, month and year represent the same variable, namely when the animal was admitted to the shelter. Therefore, year shall be omitted from the model.
 
 The other explanatory variables are all categorical and their box plots are shown. The median time at shelter appears to be low for all the explanatory variables, which is due to the median time at shelter being `r quantile(data10$time_at_shelter, prob=c(.5))`.
+
 
 Since the response variable is right-skewed, a median of the response variable is calculated. The figures below display the median of each category of the different explanatory variables.
 ```{r bar plot 1, fig.cap = "\\label{fig:animal_bar} Bar plot of animal type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
@@ -88,6 +87,22 @@ year_bar <- data10 %>%
 ggplot(year_bar, aes(x = year, y = median, fill=year)) +
   geom_col() +
   labs(x="Year", y="Time at Shelter")
+```
+
+```{r}
+month_2016 <- data10 %>% 
+  filter(year==2016) %>% 
+  select(month) %>% 
+  unique()
+month_2017 <- data10 %>% 
+  filter(year==2017) %>% 
+  select(month) %>% 
+  unique()
+month_2016$month %in% month_2017$month
+```
+No overlap between the months and years, according to the bar plot\ref{fig:year_bar}, no obvious difference between two years and the relationship between the response variable and month variable is similar to that relationship between the response variable and the year variable. Therefore, the year variable is removed.
+```{r}
+data10 <- data10[,-3]
 ```
 
 ```{r bar plot 4, fig.cap = "\\label{fig:intake_bar} Bar plot of intake type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
@@ -122,43 +137,29 @@ ggplot(chip_bar, aes(x = chip_status, y = median, fill=chip_status)) +
 
 # Formal Data Analysis
 
+## Fitting a Poisson model
+```{r Poisson model}
+poisson_model <- glm(time_at_shelter ~ ., data = data10, family = "poisson")
+summary(poisson_model)
+```
+
+```{r predict zeros use Poisson model}
+mu <- predict(poisson_model, type = "response")
+exp <- sum(dpois(x = 0, lambda = mu))
+round(exp)
+```
+
+## Fitting a Hurdle model
+```{r Hurdle model}
+hurdle_model <- hurdle(time_at_shelter ~ ., data = data10, dist = "poisson", zero.dist = "binomial")
+summary(hurdle_model)
+```
+
+```{r predict zeros use Hurdle model}
+sum(predict(hurdle_model, type = "prob")[,1])
+```
+
 # Conclusions {#sec:Conc}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
