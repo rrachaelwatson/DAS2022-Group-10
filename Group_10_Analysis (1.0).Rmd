@@ -5,6 +5,8 @@ output:
   pdf_document:
     number_sections: yes
 fig_caption: yes
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, include=FALSE}
@@ -28,7 +30,7 @@ head(data10)
 
 ```{r}
 for (i in 1:6) {
-  cat("Column", i,":")
+  cat("Column", i,":\n")
   print(levels(as.factor(data10[,i])))
   cat("\n")
 }
@@ -38,6 +40,7 @@ for (i in 1:6) {
 zero_data <- subset(data10, time_at_shelter == 0)
 nrow(zero_data)
 ```
+Excess zeros in raw data may cause overdispersion in Poisson regression. The hurdle model is suggested to fit.
 
 ```{r hist of y, fig.cap = "\\label{fig:y_hist} The histogram of day time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 ggplot(data10, mapping = aes(x = time_at_shelter)) + 
