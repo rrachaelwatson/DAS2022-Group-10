@@ -49,9 +49,12 @@ ggplot(data10, mapping = aes(x = time_at_shelter)) +
 
 ```{r pair plots, fig.cap = "\\label{fig:pairs} Pair plots of the variables", fig.width = 10, fig.align = "center", fig.pos = "H"}
 ggpairs(data10,
-upper=list(continuous=wrap("points", alpha=0.4)),
 lower="blank", axisLabels="none")
 ```
+
+Note that year and month are strongly correlated, suggesting multicollinearity. As the data were collected over the period of a year, month and year represent the same variable, namely when the animal was admitted to the shelter. Therefore, year shall be omitted from the model.
+
+The other explanatory variables are all categorical and their box plots are shown. The median time at shelter appears to be low for all the explanatory variables, which is due to the median time at shelter being `r quantile(data10$time_at_shelter, prob=c(.5))`.
 
 ```{r bar plot 1, fig.cap = "\\label{fig:bar1} Option 1: Bar plot of outcome type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 ggplot(data10, aes(x=outcome_type, y=time_at_shelter, colour=outcome_type, fill=outcome_type)) +
