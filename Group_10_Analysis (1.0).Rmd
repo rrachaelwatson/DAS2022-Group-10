@@ -53,9 +53,11 @@ Figure \ref{fig:y_hist} displays the histogram of the response variable, which i
 
 ```{r pair plots, fig.cap = "\\label{fig:pairs} Pair plots of the variables", fig.width = 10, fig.align = "center", fig.pos = "H"}
 ggpairs(data10,
-upper=list(continuous=wrap("points", alpha=0.4)),
 lower="blank", axisLabels="none")
 ```
+Note that year and month are strongly correlated, suggesting multicollinearity. As the data were collected over the period of a year, month and year represent the same variable, namely when the animal was admitted to the shelter. Therefore, year shall be omitted from the model.
+
+The other explanatory variables are all categorical and their box plots are shown. The median time at shelter appears to be low for all the explanatory variables, which is due to the median time at shelter being `r quantile(data10$time_at_shelter, prob=c(.5))`.
 
 Since the response variable is right-skewed, a median of the response variable is calculated. The figures below display the median of each category of the different explanatory variables.
 ```{r bar plot 1, fig.cap = "\\label{fig:animal_bar} Bar plot of animal type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
