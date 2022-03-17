@@ -25,7 +25,7 @@ library(kableExtra)
 # Exploratory Data Analysis
 ```{r read the data}
 data10 <- read.csv("dataset10.csv")
-head(data10)
+str(data10)
 ```
 
 ```{r}
@@ -34,7 +34,10 @@ for (i in 1:6) {
   print(levels(as.factor(data10[,i])))
   cat("\n")
 }
+data10[,2] <- as.factor(data10[,2])
+data10[,3] <- as.factor(data10[,3])
 ```
+All the explanatory variable are categorical variable and each explanatory variable have multiple levels.
 
 ```{r}
 zero_data <- subset(data10, time_at_shelter == 0)
@@ -46,6 +49,7 @@ Excess zeros in raw data may cause overdispersion in Poisson regression. The hur
 ggplot(data10, mapping = aes(x = time_at_shelter)) + 
   geom_histogram(bins = 25)
 ```
+Figure \ref{fig:y_hist} displays the histogram of the response variable, which is days time in the shelter. The histogram shows evidence of right-skewed and Poisson distribution of the response variable.
 
 ```{r pair plots, fig.cap = "\\label{fig:pairs} Pair plots of the variables", fig.width = 10, fig.align = "center", fig.pos = "H"}
 ggpairs(data10,
@@ -53,44 +57,65 @@ upper=list(continuous=wrap("points", alpha=0.4)),
 lower="blank", axisLabels="none")
 ```
 
-```{r bar plot 1, fig.cap = "\\label{fig:bar1} Option 1: Bar plot of outcome type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
-ggplot(data10, aes(x=outcome_type, y=time_at_shelter, colour=outcome_type, fill=outcome_type)) +
+Since the response variable is right-skewed, a median of the response variable is calculated. The figures below display the median of each category of the different explanatory variables.
+```{r bar plot 1, fig.cap = "\\label{fig:animal_bar} Bar plot of animal type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
+animal_bar <- data10 %>% 
+  select(time_at_shelter, animal_type) %>% 
+  group_by(animal_type) %>% 
+  summarise(median = median(time_at_shelter))
+ggplot(animal_bar, aes(x = animal_type, y = median, colour=animal_type, fill=animal_type)) +
   geom_col() +
-  labs(x="Outcome Type", y="Time at Shelter")
+  labs(x="Animal type", y="Time at Shelter")
 ```
 
-```{r bar plot 2, fig.cap = "\\label{fig:bar2} Option 2: Bar plot of outcome type vs count", fig.width = 10, fig.align = "center", fig.pos = "H"}
-count <- data10 %>% 
+```{r bar plot 2, fig.cap = "\\label{fig:month_bar} Bar plot of month vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
+month_bar <- data10 %>% 
+  select(time_at_shelter, month) %>% 
+  group_by(month) %>% 
+  summarise(median = median(time_at_shelter))
+ggplot(month_bar, aes(x = month, y = median, fill=month)) +
+  geom_col() +
+  labs(x="Month", y="Time at Shelter")
+```
+
+```{r bar plot 3, fig.cap = "\\label{fig:year_bar} Bar plot of year vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
+year_bar <- data10 %>% 
+  select(time_at_shelter, year) %>% 
+  group_by(year) %>% 
+  summarise(median = median(time_at_shelter))
+ggplot(year_bar, aes(x = year, y = median, fill=year)) +
+  geom_col() +
+  labs(x="Year", y="Time at Shelter")
+```
+
+```{r bar plot 4, fig.cap = "\\label{fig:intake_bar} Bar plot of intake type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
+intake_bar <- data10 %>% 
+  select(time_at_shelter, intake_type) %>% 
+  group_by(intake_type) %>% 
+  summarise(median = median(time_at_shelter))
+ggplot(intake_bar, aes(x = intake_type, y = median, fill=intake_type)) +
+  geom_col() +
+  labs(x="Intake type", y="Time at Shelter")
+```
+
+```{r bar plot 5, fig.cap = "\\label{fig:outcome_bar} Bar plot of outcome type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
+outcome_bar <- data10 %>% 
+  select(time_at_shelter, outcome_type) %>% 
   group_by(outcome_type) %>% 
-  summarise(count = n())
-
-ggplot(count, aes(x=outcome_type, y=count, colour=outcome_type, fill=outcome_type))+
+  summarise(median = median(time_at_shelter))
+ggplot(outcome_bar, aes(x = outcome_type, y = median, fill=outcome_type)) +
   geom_col() +
-  labs(x="Outcome Type", y="Count")
+  labs(x="Outcome type", y="Time at Shelter")
 ```
 
-```{r bar plot 3, fig.cap = "\\label{fig:bar3} Option 3: Bar plot of outcome type vs max time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
-max <- data10 %>% 
-  select(outcome_type, time_at_shelter) %>% 
-  group_by(outcome_type) %>% 
-  summarise(max = max(time_at_shelter))
-
-ggplot(max, aes(x=outcome_type, y=max, colour=outcome_type, fill=outcome_type))+
+```{r bar plot 6, fig.cap = "\\label{fig:chip_bar} Bar plot of chip status vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
+chip_bar <- data10 %>% 
+  select(time_at_shelter, chip_status) %>% 
+  group_by(chip_status) %>% 
+  summarise(median = median(time_at_shelter))
+ggplot(chip_bar, aes(x = chip_status, y = median, fill=chip_status)) +
   geom_col() +
-  labs(x="Outcome Type", y="Max Time at Shelter")
-```
-
-This is just so you can see that there's no overlap between the months and years.
-```{r}
-data10 %>% 
-  filter(year==2016) %>% 
-  select(month) %>% 
-  unique()
-
-data10 %>% 
-  filter(year==2017) %>% 
-  select(month) %>% 
-  unique()
+  labs(x="Chip status", y="Time at Shelter")
 ```
 
 # Formal Data Analysis
