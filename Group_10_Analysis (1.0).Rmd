@@ -21,7 +21,8 @@ library(GGally)
 library(tidyverse)
 library(kableExtra)
 library(pscl)
-library(MuMIn)
+library(countreg)
+library(sjPlot)
 ```
 
 # Exploratory Data Analysis
@@ -59,11 +60,9 @@ Note that year and month are strongly correlated, suggesting multicollinearity. 
 
 The other explanatory variables are all categorical and their box plots are shown. The median time at shelter appears to be low for all the explanatory variables, which is due to the median time at shelter being `r quantile(data10$time_at_shelter, prob=c(.5))`.
 
-
-Since the response variable is right-skewed, a median of the response variable is calculated. The figures below display the median of each category of the different explanatory variables.
+Since in Figure\ref{fig:y_hist} the response variable is right-skewed, a median of the response variable is calculated. The figures below display the median of each category of the different explanatory variables.
 ```{r bar plot 1, fig.cap = "\\label{fig:animal_bar} Bar plot of animal type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 animal_bar <- data10 %>% 
-  select(time_at_shelter, animal_type) %>% 
   group_by(animal_type) %>% 
   summarise(median = median(time_at_shelter))
 ggplot(animal_bar, aes(x = animal_type, y = median, colour=animal_type, fill=animal_type)) +
@@ -73,7 +72,6 @@ ggplot(animal_bar, aes(x = animal_type, y = median, colour=animal_type, fill=ani
 
 ```{r bar plot 2, fig.cap = "\\label{fig:month_bar} Bar plot of month vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 month_bar <- data10 %>% 
-  select(time_at_shelter, month) %>% 
   group_by(month) %>% 
   summarise(median = median(time_at_shelter))
 ggplot(month_bar, aes(x = month, y = median, fill=month)) +
@@ -83,7 +81,6 @@ ggplot(month_bar, aes(x = month, y = median, fill=month)) +
 
 ```{r bar plot 3, fig.cap = "\\label{fig:year_bar} Bar plot of year vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 year_bar <- data10 %>% 
-  select(time_at_shelter, year) %>% 
   group_by(year) %>% 
   summarise(median = median(time_at_shelter))
 ggplot(year_bar, aes(x = year, y = median, fill=year)) +
@@ -93,23 +90,20 @@ ggplot(year_bar, aes(x = year, y = median, fill=year)) +
 
 ```{r}
 month_2016 <- data10 %>% 
-  filter(year==2016) %>% 
-  select(month) %>% 
-  unique()
+  filter(year==2016)  
+  
 month_2017 <- data10 %>% 
-  filter(year==2017) %>% 
-  select(month) %>% 
-  unique()
-month_2016$month %in% month_2017$month
+  filter(year==2017) 
+unique(as.character(unique(month_2016$month)) %in% as.character(unique(month_2017$month)))
 ```
 No overlap between the months and years, according to the bar plot\ref{fig:year_bar}, no obvious difference between two years and the relationship between the response variable and month variable is similar to that relationship between the response variable and the year variable. Therefore, the year variable is removed.
+
 ```{r}
 data10 <- data10[,-3]
 ```
 
 ```{r bar plot 4, fig.cap = "\\label{fig:intake_bar} Bar plot of intake type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 intake_bar <- data10 %>% 
-  select(time_at_shelter, intake_type) %>% 
   group_by(intake_type) %>% 
   summarise(median = median(time_at_shelter))
 ggplot(intake_bar, aes(x = intake_type, y = median, fill=intake_type)) +
@@ -119,7 +113,6 @@ ggplot(intake_bar, aes(x = intake_type, y = median, fill=intake_type)) +
 
 ```{r bar plot 5, fig.cap = "\\label{fig:outcome_bar} Bar plot of outcome type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 outcome_bar <- data10 %>% 
-  select(time_at_shelter, outcome_type) %>% 
   group_by(outcome_type) %>% 
   summarise(median = median(time_at_shelter))
 ggplot(outcome_bar, aes(x = outcome_type, y = median, fill=outcome_type)) +
@@ -129,7 +122,6 @@ ggplot(outcome_bar, aes(x = outcome_type, y = median, fill=outcome_type)) +
 
 ```{r bar plot 6, fig.cap = "\\label{fig:chip_bar} Bar plot of chip status vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 chip_bar <- data10 %>% 
-  select(time_at_shelter, chip_status) %>% 
   group_by(chip_status) %>% 
   summarise(median = median(time_at_shelter))
 ggplot(chip_bar, aes(x = chip_status, y = median, fill=chip_status)) +
@@ -151,13 +143,11 @@ exp <- sum(dpois(x = 0, lambda = mu))
 round(exp)
 ```
 
-```{r}
-#install.packages("countreg", repos="http://R-Forge.R-project.org")
-library(countreg)
-rootogram(poisson_model, max = 80)
+The rootogram could be used to check the overdispersion. The line at 0 allows us to easily visualize where the model is over-fitting or under-fitting, if the bar is below the zero line then that value has been under-fitting. And if there is a space between the zero line and the bar then it has been over-fitting. For the model to be fitted correctly, the bar should sit as close to the zero line as possible.
+```{r poisson rootogram,fig.cap = "\\label{fig:poisson_rootogram} Rootogram of Poisson Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
+rootogram(poisson_model, max = max(data10$time_at_shelter))
 ```
-
-The Poisson model is severely under-fitting zero counts. There were `r sum(data10$time_at_shelter < 1)` zero counts observed in the data set but the model only fitted `r round(exp)`. It is also over-fitting the lower positive counts and under-fitting the higher counts, suggesting there is over-dispersion in the model. Hence a hurdle model will be fitted to provide a better fit.
+From Figure\ref{fig:poisson_rootogram}, the Poisson model is severely under-fitting zero counts. There were `r sum(data10$time_at_shelter < 1)` zero counts observed in the data set but the model only fitted `r round(exp)`. It is also over-fitting the lower positive counts and under-fitting the higher counts, suggesting there is over-dispersion in the model. Hence a hurdle model will be fitted to provide a better fit.
 
 ## Fitting a Hurdle model
 ```{r Hurdle model}
@@ -168,31 +158,99 @@ summary(hurdle_model)
 ```{r predict zeros use Hurdle model}
 sum(predict(hurdle_model, type = "prob")[,1])
 ```
+The model is fitting the zero counts perfectly because of the model design to be.
 
-
-```{r fit rootogram to check overdispersion}
-rootogram(hurdle_model, max = 80)
+```{r binomial hurdle rootogram,fig.cap = "\\label{fig:binomial_hurdle_rootogram} Rootogram of Binomial Hurdle Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
+rootogram(hurdle_model, max = max(data10$time_at_shelter))
 ```
-
-The model is fitting the zero counts perfectly. However, counts 1,2 and 4 are being severely under-fitted, while 6-9 are being over-fitted. There is also under-fitting at the higher counts which suggests over-dispersion. Therefore, a negative binomial hurdle model shall be fitted to address this. 
+In Figure\ref{fig:binomial_hurdle_rootogram} Counts 1,2 and 4 are being severely under-fitted, while 6-9 are being over-fitted. There is also under-fitting at the higher counts which suggests over-dispersion. Therefore, a negative binomial hurdle model shall be fitted to address this. 
 
 ```{r fit neg bin hurdle model}
 hurdle_model_nb <- hurdle(time_at_shelter ~ ., data = data10, dist = "negbin")
+```
+
+```{r predict zeros use negative binomial Hurdle model}
+sum(predict(hurdle_model_nb, type = "prob")[,1])
+```
+
+```{r negative binomial hurdle rootogram,fig.cap = "\\label{fig:negative_binomial_hurdle_rootogram} Rootogram of Negative Binomial Hurdle Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
+AIC(hurdle_model)
+AIC(hurdle_model_nb)
 
 rootogram(hurdle_model_nb, max = 80)
 ```
+From the AIC of two models, the negative binomial model shows a much better fit to the data. However, in Figure\ref{fig:negative_binomial_hurdle_rootogram} some values are still being under-fitted.
 
-This shows a much better fit to the data. However, some values are still being under-fitted.
+### All subset variable selection using AIC
+```{r all subset variable selection using AIC}
 
-
-## Variable Selection
-
-```{r}
-options(na.action = "na.fail")
-combinations <- dredge(hurdle_model_nb)
-min_AIC <- which.min(combinations$AICc)
-combinations[min_AIC]
 ```
+
+### p-value and confidence interval
+```{r p-value}
+summary(hurdle_model_nb)
+```
+
+```{r confidence intervals of negative binomial model}
+nb_estim <- coef(summary(hurdle_model_nb))$zero[,"Estimate"]
+nb_sd <- coef(summary(hurdle_model_nb))$zero[,"Std. Error"]
+nb_upper <- nb_estim + 1.96*nb_sd
+nb_lower <- nb_estim - 1.96*nb_sd
+
+nb_CI <- as.data.frame(cbind(nb_estim, nb_lower, nb_upper))
+nb_CI <- cbind(c(row.names(nb_CI)), nb_CI)
+row.names(nb_CI) <- NULL
+colnames(nb_CI)[1] <- "category"
+# Delete intercept term
+nb_CI <- nb_CI[-1,]
+ggplot(nb_CI, aes(y = category, x = nb_estim, xmin = nb_lower, xmax = nb_upper)) + 
+  geom_linerange() + 
+  geom_pointrange() +
+  geom_vline(xintercept = 0, col = "red")
+  
+# Delete variable animal_type
+nb_CI <- nb_CI[-1:-3,]
+ggplot(nb_CI, aes(y = category, x = nb_estim, xmin = nb_lower, xmax = nb_upper)) + 
+  geom_linerange() + 
+  geom_pointrange() +
+  geom_vline(xintercept = 0, col = "red")
+
+# Delete variable chip_status and variable month
+nb_CI <- nb_CI[-1:-11,]
+nb_CI <- nb_CI[-7:-8,]
+ggplot(nb_CI, aes(y = category, x = nb_estim, xmin = nb_lower, xmax = nb_upper)) + 
+  geom_linerange() + 
+  geom_pointrange() +
+  geom_vline(xintercept = 0, col = "red")
+```
+
+```{r confidence intervals of truncated Poisson model}
+tP_estim <- coef(summary(hurdle_model_nb))$count[,"Estimate"]
+tP_sd <- coef(summary(hurdle_model_nb))$count[,"Std. Error"]
+tP_upper <- tP_estim + 1.96*tP_sd
+tP_lower <- tP_estim - 1.96*tP_sd
+
+tP_CI <- as.data.frame(cbind(tP_estim, tP_lower, tP_upper))
+tP_CI <- cbind(row.names(tP_CI), tP_CI)
+row.names(tP_CI) <- NULL
+colnames(tP_CI)[1] <- "category"
+# Delete intercept term
+tP_CI <- tP_CI[-1,]
+ggplot(tP_CI, aes(y = category, x = tP_estim, xmin = tP_lower, xmax = tP_upper)) + 
+  geom_linerange() + 
+  geom_pointrange() +
+  geom_vline(xintercept = 0, col = "red")
+
+# Delete variable animal_type
+tP_CI <- tP_CI[-1:-3,]
+ggplot(tP_CI, aes(y = category, x = tP_estim, xmin = tP_lower, xmax = tP_upper)) + 
+  geom_linerange() + 
+  geom_pointrange() +
+  geom_vline(xintercept = 0, col = "red")
+```
+
+
+## Model checking
 
 # Conclusions {#sec:Conc}
 
