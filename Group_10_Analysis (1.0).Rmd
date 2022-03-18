@@ -21,6 +21,7 @@ library(GGally)
 library(tidyverse)
 library(kableExtra)
 library(pscl)
+library(MuMIn)
 ```
 
 # Exploratory Data Analysis
@@ -182,6 +183,16 @@ rootogram(hurdle_model_nb, max = 80)
 ```
 
 This shows a much better fit to the data. However, some values are still being under-fitted.
+
+
+## Variable Selection
+
+```{r}
+options(na.action = "na.fail")
+combinations <- dredge(hurdle_model_nb)
+min_AIC <- which.min(combinations$AICc)
+combinations[min_AIC]
+```
 
 # Conclusions {#sec:Conc}
 
