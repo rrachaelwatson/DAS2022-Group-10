@@ -150,7 +150,13 @@ exp <- sum(dpois(x = 0, lambda = mu))
 round(exp)
 ```
 
-The Poisson model is severely under-fitting zero counts. There were `r sum(data10$time_at_shelter < 1)` zero counts observed in the data set but the model only fitted `r round(exp)`. Hence a hurdle model will be fitted to provide a better fit.
+```{r}
+#install.packages("countreg", repos="http://R-Forge.R-project.org")
+library(countreg)
+rootogram(poisson_model, max = 80)
+```
+
+The Poisson model is severely under-fitting zero counts. There were `r sum(data10$time_at_shelter < 1)` zero counts observed in the data set but the model only fitted `r round(exp)`. It is also over-fitting the lower positive counts and under-fitting the higher counts, suggesting there is over-dispersion in the model. Hence a hurdle model will be fitted to provide a better fit.
 
 ## Fitting a Hurdle model
 ```{r Hurdle model}
@@ -164,8 +170,6 @@ sum(predict(hurdle_model, type = "prob")[,1])
 
 
 ```{r fit rootogram to check overdispersion}
-#install.packages("countreg", repos="http://R-Forge.R-project.org")
-library(countreg)
 rootogram(hurdle_model, max = 80)
 ```
 
