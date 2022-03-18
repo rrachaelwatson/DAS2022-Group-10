@@ -20,6 +20,7 @@ library(ggplot2)
 library(GGally)
 library(tidyverse)
 library(kableExtra)
+library(pscl)
 ```
 
 # Exploratory Data Analysis
@@ -149,6 +150,8 @@ exp <- sum(dpois(x = 0, lambda = mu))
 round(exp)
 ```
 
+The Poisson model is severely under-fitting zero counts. There were `r sum(data10$time_at_shelter < 1)` zero counts observed in the data set but the model only fitted `r round(exp)`. Hence a hurdle model will be fitted to provide a better fit.
+
 ## Fitting a Hurdle model
 ```{r Hurdle model}
 hurdle_model <- hurdle(time_at_shelter ~ ., data = data10, dist = "poisson", zero.dist = "binomial")
@@ -158,6 +161,23 @@ summary(hurdle_model)
 ```{r predict zeros use Hurdle model}
 sum(predict(hurdle_model, type = "prob")[,1])
 ```
+
+
+```{r fit rootogram to check overdispersion}
+#install.packages("countreg", repos="http://R-Forge.R-project.org")
+library(countreg)
+rootogram(hurdle_model, max = 80)
+```
+
+The model is fitting the zero counts perfectly. However, counts 1,2 and 4 are being severely under-fitted, while 6-9 are being over-fitted. There is also under-fitting at the higher counts which suggests over-dispersion. Therefore, a negative binomial hurdle model shall be fitted to address this. 
+
+```{r fit neg bin hurdle model}
+hurdle_model_nb <- hurdle(time_at_shelter ~ ., data = data10, dist = "negbin")
+
+rootogram(hurdle_model_nb, max = 80)
+```
+
+This shows a much better fit to the data. However, some values are still being under-fitted.
 
 # Conclusions {#sec:Conc}
 
