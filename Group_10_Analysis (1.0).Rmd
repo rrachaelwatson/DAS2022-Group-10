@@ -31,7 +31,34 @@ library(MuMIn)
 data10 <- read.csv("dataset10.csv")
 str(data10)
 ```
+task1_data <- read_csv("C:/Users/li944/Desktop/dataset10.csv")
+task1_data %>%
+  filter(animal_type=="DOG")%>%
+  group_by(year) %>% 
+  summarise(n=n(),Mean=round(mean(time_at_shelter),digits=1), St.Dev=round(sd(time_at_shelter),digits=1),#标准差和方差
+            Min=min(time_at_shelter), Q1 = quantile(time_at_shelter,0.25), Median=median(time_at_shelter),#最小值、0.25分位数和中位数
+            Q3 = quantile(time_at_shelter,0.75), Max=max(time_at_shelter)) #0.75分位数和最大值
 
+task1_data %>%
+  filter(animal_type=="CAT")%>%
+  group_by(year) %>% ##根据年份分组
+  summarise(n=n(),Mean=round(mean(time_at_shelter),digits=1), St.Dev=round(sd(time_at_shelter),digits=1),#标准差和方差
+            Min=min(time_at_shelter), Q1 = quantile(time_at_shelter,0.25), Median=median(time_at_shelter),#最小值、0.25分位数和中位数
+            Q3 = quantile(time_at_shelter,0.75), Max=max(time_at_shelter))
+
+task1_data %>%
+  filter(animal_type=="WILDLIFE")%>%
+  group_by(year) %>% ##根据年份分组
+  summarise(n=n(),Mean=round(mean(time_at_shelter),digits=1), St.Dev=round(sd(time_at_shelter),digits=1),#标准差和方差
+            Min=min(time_at_shelter), Q1 = quantile(time_at_shelter,0.25), Median=median(time_at_shelter),#最小值、0.25分位数和中位数
+            Q3 = quantile(time_at_shelter,0.75), Max=max(time_at_shelter))
+
+task1_data %>%
+  filter(animal_type=="BIRD")%>%
+  group_by(year) %>% ##根据年份分组
+  summarise(n=n(),Mean=round(mean(time_at_shelter),digits=1), St.Dev=round(sd(time_at_shelter),digits=1),#标准差和方差
+            Min=min(time_at_shelter), Q1 = quantile(time_at_shelter,0.25), Median=median(time_at_shelter),#最小值、0.25分位数和中位数
+            Q3 = quantile(time_at_shelter,0.75), Max=max(time_at_shelter))
 ```{r}
 for (i in 1:6) {
   cat("Column", i,":\n")
