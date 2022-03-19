@@ -22,7 +22,6 @@ library(tidyverse)
 library(kableExtra)
 library(pscl)
 library(countreg)
-library(sjPlot)
 ```
 
 # Exploratory Data Analysis
@@ -222,6 +221,12 @@ ggplot(nb_CI, aes(y = category, x = nb_estim, xmin = nb_lower, xmax = nb_upper))
   geom_linerange() + 
   geom_pointrange() +
   geom_vline(xintercept = 0, col = "red")
+```
+
+Since the confidence intervals of variables animal_type and chip_status and month are not significantly different from 0, we fit the negative binomial model only depends on varables outcome_type and intake_type.
+```{r}
+hurdle_model_nb <- hurdle(time_at_shelter ~ . | outcome_type + intake_type, data = data10, dist = "negbin")
+summary(hurdle_model_nb)
 ```
 
 ```{r confidence intervals of truncated Poisson model}
