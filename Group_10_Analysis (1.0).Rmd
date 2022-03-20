@@ -23,7 +23,6 @@ library(kableExtra)
 library(pscl)
 library(countreg)
 library(sjPlot)
-library(epiDisplay)
 ```
 
 # Exploratory Data Analysis
