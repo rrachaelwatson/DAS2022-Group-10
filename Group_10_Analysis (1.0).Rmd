@@ -187,18 +187,18 @@ exp <- sum(dpois(x = 0, lambda = mu))
 From Figure\ref{fig:poisson_rootogram}, the Poisson model is severely under-fitting zero counts. There were `r sum(data10$time_at_shelter < 1)` zero counts observed in the data set but the model only fitted `r round(exp)`. It is also over-fitting the lower positive counts and under-fitting the higher counts, suggesting there is over-dispersion in the model. Hence a hurdle model will be fitted to provide a better fit.
 
 ## Fitting a Hurdle model
-```{r Hurdle model}
-hurdle_model <- hurdle(time_at_shelter ~ ., data = data10, dist = "poisson", zero.dist = "binomial")
+```{r Poisson Hurdle model}
+hurdle_model <- hurdle(time_at_shelter ~ ., data = data10, zero.dist = "binomial", dist = "poisson")
 summary(hurdle_model)
 ```
 
-```{r binomial hurdle rootogram,fig.cap = "\\label{fig:binomial_hurdle_rootogram} Rootogram of Binomial Hurdle Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
+```{r Poisson hurdle rootogram,fig.cap = "\\label{fig:binomial_hurdle_rootogram} Rootogram of Binomial Hurdle Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
 rootogram(hurdle_model, max = max(data10$time_at_shelter))
 ```
 In Figure\ref{fig:binomial_hurdle_rootogram} Counts 1,2 and 4 are being severely under-fitted, while 6-9 are being over-fitted. There is also under-fitting at the higher counts which suggests over-dispersion. Therefore, a negative binomial hurdle model shall be fitted to address this. 
 
 ```{r fit negative binomial hurdle model}
-hurdle_model_nb <- hurdle(time_at_shelter ~ ., data = data10, dist = "negbin")
+hurdle_model_nb <- hurdle(time_at_shelter ~ ., data = data10, zero.dist = "binomial", dist = "negbin")
 ```
 
 ```{r negative binomial hurdle rootogram,fig.cap = "\\label{fig:negative_binomial_hurdle_rootogram} Rootogram of Negative Binomial Hurdle Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
@@ -212,7 +212,7 @@ step(hurdle_model_nb, direction = "both")
 ```
 Using AIC as a selection criteria, the model with the minimum AIC and hence the best fit for the data is the model with animal type, chip status, intake type and outcome type as the explanatory variables.
 ```{r new negative binomial hurdle model}
-final_hurdle_model_nb <- hurdle(time_at_shelter ~ animal_type + intake_type + outcome_type + chip_status, data = data10, dist = "negbin")
+final_hurdle_model_nb <- hurdle(time_at_shelter ~ animal_type + intake_type + outcome_type + chip_status, data = data10, zero.dist = "binomial", dist = "negbin")
 ```
 
 ### P-value and confidence intervals
@@ -225,12 +225,10 @@ plot_model(final_hurdle_model_nb, show.values = T, transform = NULL, value.offse
 ```
 
 ## Goodness of fit
-
 ```{r final rootogram,fig.cap = "\\label{fig:final_model_rootogram} Rootogram of Negative Binomial Hurdle Model with reduced variables", fig.width = 10, fig.align = "center", fig.pos = "H"}
-rootogram(final_hurdle_model_nb, max=max(data10$time_at_shelter))
+rootogram(final_hurdle_model_nb, style = "standing", max=max(data10$time_at_shelter))
 ```
-
-The final model provides an adequate fit to the data. It has the lowest AIC of `r round(AIC(final_hurdle_model_nb), 2)` and as seen from Figure \ref{fig:final_model_rootogram} fits most values well.
+The final model provides an adequate fit to the data. It has the lowest AIC of `r round(AIC(final_hurdle_model_nb), 2)` and as seen from Figure \ref{fig:final_model_rootogram} the model line fits most ot the values well.
   
 # Conclusions {#sec:Conc}
 
