@@ -1,12 +1,12 @@
 ---
 title: "Influential factors of days spent at the shelter"
-author: "Hanfan Chen 2703334C, Zhaohao Li 2611602L, Zhenhao Qiao 2612824Q, Chao Wang 2518608W, RachaelWatson 2195719W"
+author: "Hanfan Chen, Zhaohao Li, Zhenhao Qiao, Chao Wang, RachaelWatson"
 output:
   pdf_document:
     number_sections: yes
 fig_caption: yes
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r, include=FALSE}
@@ -20,20 +20,25 @@ library(ggplot2)
 library(GGally)
 library(tidyverse)
 library(kableExtra)
+library(epiDisplay)
 library(pscl)
 library(countreg)
 library(sjPlot)
 ```
 
 # Exploratory Data Analysis
+The first five lines of the raw data:
 ```{r read the data}
 data10 <- read.csv("dataset10.csv")
-str(data10)
+
+kable(head(data10, 5), caption = "Raw data") %>% 
+  kable_styling(font_size = 10, latex_options = "hold_position")
 ```
 
+Levels of each explanatory variable:
 ```{r}
 for (i in 1:6) {
-  cat("Column", i,":\n")
+  cat(colnames(data10)[i],":\n")
   print(levels(as.factor(data10[,i])))
   cat("\n")
 }
@@ -41,11 +46,6 @@ data10[,2] <- as.factor(data10[,2])
 data10[,3] <- as.factor(data10[,3])
 ```
 All the explanatory variable are categorical variable and each explanatory variable have multiple levels.
-
-```{r}
-sum(data10$time_at_shelter == 0)
-```
-Over 300 zeros in raw data may cause overdispersion in Poisson regression. The negative binomial model is suggested to fit.
 
 ```{r hist of y, fig.cap = "\\label{fig:y_hist} The histogram of day time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 ggplot(data10, mapping = aes(x = time_at_shelter)) + 
@@ -56,10 +56,10 @@ Figure \ref{fig:y_hist} displays the histogram of the response variable, which i
 ```{r pair plots, fig.cap = "\\label{fig:pairs} Pair plots of the variables", fig.width = 10, fig.align = "center", fig.pos = "H"}
 ggpairs(data10, lower="blank", axisLabels="none")
 ```
-The explanatory variables are all categorical and their box plots are shown. The median time at shelter appears to be low for all the explanatory variables, which is due to the median time at shelter being `r quantile(data10$time_at_shelter, prob=c(.5))`.
+The explanatory variables are all categorical and their box plots are shown in Figure \ref{fig:pairs}. The median time at shelter appears to be low for all the explanatory variables, which is due to the median time at shelter being `r quantile(data10$time_at_shelter, prob=c(.5))`.
 
 
-Since in Figure\ref{fig:y_hist} the response variable is right-skewed, a median of the response variable is calculated. The figures below display the median of each category of the different explanatory variables.
+Since in Figure \ref{fig:y_hist} the response variable is right-skewed, a median of the response variable is calculated. The figures below display the median of each category of the different explanatory variables.
 ```{r bar plot 1, fig.cap = "\\label{fig:animal_bar} Bar plot of animal type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 animal_bar <- data10 %>% 
   group_by(animal_type) %>% 
@@ -76,6 +76,7 @@ animal_categ <- data10 %>%
 kable(animal_categ, caption = "Summary statistics on the time at shelter by animal type") %>% 
   kable_styling(font_size = 10, latex_options = "hold_position")
 ```
+From Figure \ref{fig:animal_bar}, the median value of time at shelter seems different for each category except cat and dog. However, since the sample size for bird and wildlife is much smaller than dog and cat, this result is suspectable.
 
 ```{r bar plot 2, fig.cap = "\\label{fig:month_bar} Bar plot of month vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 month_bar <- data10 %>% 
@@ -93,6 +94,7 @@ month_categ <- data10 %>%
 kable(month_categ, caption = "Summary statistics on the time at shelter by month") %>% 
   kable_styling(font_size = 10, latex_options = "hold_position")
 ```
+From Figure \ref{fig:month_bar}, the median value of time at shelter is similar for each month. All the summary statistics are similar.
 
 ```{r bar plot 3, fig.cap = "\\label{fig:year_bar} Bar plot of year vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 year_bar <- data10 %>% 
@@ -111,7 +113,7 @@ month_2017 <- data10 %>%
   filter(year==2017) 
 unique(as.character(unique(month_2016$month)) %in% as.character(unique(month_2017$month)))
 ```
-No overlap between the months and years, according to the bar plot\ref{fig:year_bar}, no obvious difference between two years and the relationship between the response variable and month variable is similar to that relationship between the response variable and the year variable. Therefore, the year variable is removed.
+No overlap between the months and years, according to Figure \ref{fig:year_bar}, no obvious difference between two years and the relationship between the response variable and month variable is similar to that relationship between the response variable and the year variable. Therefore, the year variable is removed.
 
 ```{r}
 data10 <- data10[,-3]
@@ -133,7 +135,9 @@ intake_categ <- data10 %>%
 kable(intake_categ, caption = "Summary statistics on the time at shelter by intake type") %>% 
   kable_styling(font_size = 10, latex_options = "hold_position")
 ```
+From Figure \ref{fig:intake_bar}, obvious difference is shown between each category.
 
+Variable Outcome_type – Final outcome for the admitted animal
 ```{r bar plot 5, fig.cap = "\\label{fig:outcome_bar} Bar plot of outcome type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 outcome_bar <- data10 %>% 
   group_by(outcome_type) %>% 
@@ -150,6 +154,7 @@ outcome_categ <- data10 %>%
 kable(outcome_categ, caption = "Summary statistics on the time at shelter by outcome type") %>% 
   kable_styling(font_size = 10, latex_options = "hold_position")
 ```
+From Figure \ref{fig:outcome_bar}, the obvious difference is shown between each category. The sample size of DIED and FOSTER are small compared with others.
 
 ```{r bar plot 6, fig.cap = "\\label{fig:chip_bar} Bar plot of chip status vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
 chip_bar <- data10 %>% 
@@ -167,15 +172,34 @@ chips_categ <- data10 %>%
 kable(chips_categ, caption = "Summary statistics on the time at shelter by chips status") %>% 
   kable_styling(font_size = 10, latex_options = "hold_position")
 ```
+From Figure \ref{fig:outcome_bar}, some differences exist. The sample size of UNABLE TO SCAN is small compared with others.
 
-
-# Formal Data Analysis
-
-## Fitting a Poisson model
+# Formal Data Analysis——Fitting a Poisson model
 ```{r Poisson model}
 poisson_model <- glm(time_at_shelter ~ ., data = data10, family = "poisson")
+```
+
+## Variable selection using AIC
+```{r all subset variable selection using AIC for Poisson}
+step(poisson_model, direction = "both")
+```
+Using AIC as a selection criteria, the model with the minimum AIC is selected and hence the best fit for the data is the saturated model.
+
+## P-value and confidence intervals for the Poisson model
+```{r Poisson model p-value}
 summary(poisson_model)
 ```
+
+```{r Poisson model CI plots, fig.cap = "\\label{fig:poisson_CIs} Confidence Intervals of the Poisson Model", fig.width = 10, fig.height = 7, fig.align = "center", fig.pos = "H"}
+plot_model(poisson_model, show.values = T, transform = NULL, value.offset = 0.4, value.size = 5, dot.size = 3)
+```
+From Figure \ref{fig:poisson_CIs}, comparing with the baseline categories, according to the p-values. All the categorical variables are significant in factors intake type and outcome type and chip status. Two categorical variables are significant in factor animal type and one is insignificant. Five out of eleven categorical variables are significant in factor month and the others are not.
+
+## Goodness of fit and overdispersion for the Poisson model
+```{r Deviance and Chi-squared goodness-of-fit test}
+poisgof(poisson_model)
+```
+Since the p-value is smaller than 0.05, the null hypothesis is rejected and the overdispersion is significant.
 
 The rootogram could be used to check the overdispersion. The line at 0 allows us to easily visualize where the model is over-fitting or under-fitting, if the bar is below the zero line then that value has been under-fitting. And if there is a space between the zero line and the bar then it has been over-fitting. For the model to be fitted correctly, the bar should sit as close to the zero line as possible.
 ```{r poisson rootogram,fig.cap = "\\label{fig:poisson_rootogram} Rootogram of Poisson Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
@@ -184,9 +208,10 @@ rootogram(poisson_model, max = max(data10$time_at_shelter))
 mu <- predict(poisson_model, type = "response")
 exp <- sum(dpois(x = 0, lambda = mu))
 ```
-From Figure\ref{fig:poisson_rootogram}, the Poisson model is severely under-fitting zero counts. There were `r sum(data10$time_at_shelter < 1)` zero counts observed in the data set but the model only fitted `r round(exp)`. It is also over-fitting the lower positive counts and under-fitting the higher counts, suggesting there is over-dispersion in the model. Hence a hurdle model will be fitted to provide a better fit.
+In Figure\ref{fig:poisson_rootogram}, the Poisson model is severely under-fitting zero counts. There were `r sum(data10$time_at_shelter < 1)` zero counts observed in the data set but the model only fitted `r round(exp)`. It is also over-fitting the lower positive counts and under-fitting the higher counts, suggesting there is over-dispersion due to excess zeroes in the model. Hence a hurdle model will be fitted to provide a better fit.
 
-## Fitting a Hurdle model
+# Formal Data Analysis——Fitting a Hurdle model
+## Fitting a Binomial-Poisson hurdle model
 ```{r Poisson Hurdle model}
 hurdle_model <- hurdle(time_at_shelter ~ ., data = data10, zero.dist = "binomial", dist = "poisson")
 summary(hurdle_model)
@@ -197,6 +222,7 @@ rootogram(hurdle_model, max = max(data10$time_at_shelter))
 ```
 In Figure\ref{fig:binomial_hurdle_rootogram} Counts 1,2 and 4 are being severely under-fitted, while 6-9 are being over-fitted. There is also under-fitting at the higher counts which suggests over-dispersion. Therefore, a negative binomial hurdle model shall be fitted to address this. 
 
+## Fitting a Binomial-Negative binomial hurdle model
 ```{r fit negative binomial hurdle model}
 hurdle_model_nb <- hurdle(time_at_shelter ~ ., data = data10, zero.dist = "binomial", dist = "negbin")
 ```
@@ -206,30 +232,43 @@ rootogram(hurdle_model_nb, max = max(data10$time_at_shelter))
 ```
 The AIC of the hurdle model is `r format(round(AIC(hurdle_model)), scientific=FALSE)` and the AIC of the negative binomial hurdle model is `r round(AIC(hurdle_model_nb))`. From this, the negative binomial model shows a much better fit to the data. However, in Figure\ref{fig:negative_binomial_hurdle_rootogram} some values are still being under-fitted.
 
-### Variable selection using AIC
+## Variable selection using AIC for negative binomial hurdle model
 ```{r all subset variable selection using AIC}
 step(hurdle_model_nb, direction = "both")
 ```
-Using AIC as a selection criteria, the model with the minimum AIC and hence the best fit for the data is the model with animal type, chip status, intake type and outcome type as the explanatory variables.
+Using AIC as a selection criteria, the model with the minimum AIC is selected and hence the best fit for the data is the model with animal type, chip status, intake type and outcome type as the explanatory variables.
 ```{r new negative binomial hurdle model}
-final_hurdle_model_nb <- hurdle(time_at_shelter ~ animal_type + intake_type + outcome_type + chip_status, data = data10, zero.dist = "binomial", dist = "negbin")
+hurdle_model_nb_2 <- hurdle(time_at_shelter ~ animal_type + intake_type + outcome_type + chip_status, data = data10, zero.dist = "binomial", dist = "negbin")
 ```
 
-### P-value and confidence intervals
-```{r p-value}
-summary(final_hurdle_model_nb)
+## P-value and confidence intervals for negative binomial hurdle model
+```{r negative binomial hurdle model p-value}
+summary(hurdle_model_nb_2)
 ```
 
-```{r CI plots}
-plot_model(final_hurdle_model_nb, show.values = T, transform = NULL, value.offset = 0.4, value.size = 2.8, dot.size = 1.3)
+```{r negative binomial hurdle model CI plots, fig.cap = "\\label{fig:hurdle_CIs} Confidence Intervals of the Negative Binomial Hurdle Model", fig.width = 10, fig.height = 8, fig.align = "center", fig.pos = "H"}
+plot_model(hurdle_model_nb_2, show.values = T, transform = NULL, value.offset = 0.4, value.size = 5, dot.size = 3)
 ```
+From Figure \ref{fig:hurdle_CIs}, comparing with the baseline categories, according to the p-values. 
+In the Binomial model, all the categorical variables are significant in factors intake type and outcome type and all the categorical variables are insignificant in factors animal type and chip status.
+In the Truncated Poisson model, all the categorical variable is significant in factors intake type and all the categorical variables are significant in factors animal type.
 
-## Goodness of fit
+Since the factor animal type is not significant for the model, the animal type is remved to fit a new model.
+```{r new negative binomial hurdle model remove animal type}
+final_hurdle_model_nb <- hurdle(time_at_shelter ~ intake_type + outcome_type + chip_status, data = data10, zero.dist = "binomial", dist = "negbin")
+```
+AIC only increase `r round(AIC(final_hurdle_model_nb) - AIC(hurdle_model_nb_2), 2)`, the factor animal type is removed to make the model simpler.
+
+```{r final negative binomial hurdle model CI plots, fig.cap = "\\label{fig:final_hurdle_CIs} Confidence Intervals of the Negative Binomial Hurdle Model", fig.width = 10, fig.height = 8, fig.align = "center", fig.pos = "H"}
+plot_model(final_hurdle_model_nb, show.values = T, transform = NULL, value.offset = 0.4, value.size = 5, dot.size = 3)
+```
+From Figure \ref{fig:final_hurdle_CIs}, according to the p-value of each categorical variable, all the factors are influential.
+
+## Goodness of fit for the negative binomial hurdle model
 ```{r final rootogram,fig.cap = "\\label{fig:final_model_rootogram} Rootogram of Negative Binomial Hurdle Model with reduced variables", fig.width = 10, fig.align = "center", fig.pos = "H"}
 rootogram(final_hurdle_model_nb, style = "standing", max=max(data10$time_at_shelter))
 ```
-The final model provides an adequate fit to the data. It has the lowest AIC of `r round(AIC(final_hurdle_model_nb), 2)` and as seen from Figure \ref{fig:final_model_rootogram} the model line fits most ot the values well.
+The final model provides an adequate fit to the data. It has the lowest AIC of `r round(AIC(final_hurdle_model_nb), 2)` and as seen from Figure \ref{fig:final_model_rootogram} the model red line fits the most of value of count data well.
   
 # Conclusions {#sec:Conc}
-
-The model which provides the best fit to the data is one which includes animal type, intake type, outcome type and chip status as explanatory variables. Hence these factors are the most influential in determining the number of days an animal spends at the shelter before their final outcome is decided.
+Due to the excess zeroes problem, Poisson model is not suitable to fit the data. The model which provides the best fit to the data is the negative binomial Hurdle model which includes intake type, outcome type and chip status as explanatory variables. Hence these factors are the most influential in determining the number of days an animal spends at the shelter before its final outcome is decided.
