@@ -74,7 +74,7 @@ animal_categ <- data10 %>%
   group_by(animal_type) %>% 
   summarise(n=n(),Mean= mean(time_at_shelter), St.Dev = sd(time_at_shelter), Min=min(time_at_shelter), Q1 = quantile(time_at_shelter,0.25), Median=median(time_at_shelter), Q3 = quantile(time_at_shelter,0.75), Max=max(time_at_shelter)) 
 kable(animal_categ, caption = "Summary statistics on the time at shelter by animal type") %>% 
-  kable_styling(font_size = 10, latex_options = "hold position")
+  kable_styling(font_size = 10, latex_options = "hold_position")
 ```
 
 ```{r bar plot 2, fig.cap = "\\label{fig:month_bar} Bar plot of month vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
@@ -91,7 +91,7 @@ month_categ <- data10 %>%
   group_by(month) %>% 
   summarise(n=n(),Mean= mean(time_at_shelter), St.Dev = sd(time_at_shelter), Min=min(time_at_shelter), Q1 = quantile(time_at_shelter,0.25), Median=median(time_at_shelter), Q3 = quantile(time_at_shelter,0.75), Max=max(time_at_shelter)) 
 kable(month_categ, caption = "Summary statistics on the time at shelter by month") %>% 
-  kable_styling(font_size = 10, latex_options = "hold position")
+  kable_styling(font_size = 10, latex_options = "hold_position")
 ```
 
 ```{r bar plot 3, fig.cap = "\\label{fig:year_bar} Bar plot of year vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
@@ -131,7 +131,7 @@ intake_categ <- data10 %>%
   group_by(intake_type) %>% 
   summarise(n=n(),Mean= mean(time_at_shelter), St.Dev = sd(time_at_shelter), Min=min(time_at_shelter), Q1 = quantile(time_at_shelter,0.25), Median=median(time_at_shelter), Q3 = quantile(time_at_shelter,0.75), Max=max(time_at_shelter)) 
 kable(intake_categ, caption = "Summary statistics on the time at shelter by intake type") %>% 
-  kable_styling(font_size = 10, latex_options = "hold position")
+  kable_styling(font_size = 10, latex_options = "hold_position")
 ```
 
 ```{r bar plot 5, fig.cap = "\\label{fig:outcome_bar} Bar plot of outcome type vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
@@ -148,7 +148,7 @@ outcome_categ <- data10 %>%
   group_by(outcome_type) %>% 
   summarise(n=n(),Mean= mean(time_at_shelter), St.Dev = sd(time_at_shelter), Min=min(time_at_shelter), Q1 = quantile(time_at_shelter,0.25), Median=median(time_at_shelter), Q3 = quantile(time_at_shelter,0.75), Max=max(time_at_shelter)) 
 kable(outcome_categ, caption = "Summary statistics on the time at shelter by outcome type") %>% 
-  kable_styling(font_size = 10, latex_options = "hold position")
+  kable_styling(font_size = 10, latex_options = "hold_position")
 ```
 
 ```{r bar plot 6, fig.cap = "\\label{fig:chip_bar} Bar plot of chip status vs time at shelter", fig.width = 10, fig.align = "center", fig.pos = "H"}
@@ -165,7 +165,7 @@ chips_categ <- data10 %>%
   group_by(chip_status) %>% 
   summarise(n=n(),Mean= mean(time_at_shelter), St.Dev = sd(time_at_shelter), Min=min(time_at_shelter), Q1 = quantile(time_at_shelter,0.25), Median=median(time_at_shelter), Q3 = quantile(time_at_shelter,0.75), Max=max(time_at_shelter)) 
 kable(chips_categ, caption = "Summary statistics on the time at shelter by chips status") %>% 
-  kable_styling(font_size = 10, latex_options = "hold position")
+  kable_styling(font_size = 10, latex_options = "hold_position")
 ```
 
 
@@ -180,6 +180,9 @@ summary(poisson_model)
 The rootogram could be used to check the overdispersion. The line at 0 allows us to easily visualize where the model is over-fitting or under-fitting, if the bar is below the zero line then that value has been under-fitting. And if there is a space between the zero line and the bar then it has been over-fitting. For the model to be fitted correctly, the bar should sit as close to the zero line as possible.
 ```{r poisson rootogram,fig.cap = "\\label{fig:poisson_rootogram} Rootogram of Poisson Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
 rootogram(poisson_model, max = max(data10$time_at_shelter))
+
+mu <- predict(poisson_model, type = "response")
+exp <- sum(dpois(x = 0, lambda = mu))
 ```
 From Figure\ref{fig:poisson_rootogram}, the Poisson model is severely under-fitting zero counts. There were `r sum(data10$time_at_shelter < 1)` zero counts observed in the data set but the model only fitted `r round(exp)`. It is also over-fitting the lower positive counts and under-fitting the higher counts, suggesting there is over-dispersion in the model. Hence a hurdle model will be fitted to provide a better fit.
 
@@ -223,5 +226,12 @@ plot_model(final_hurdle_model_nb, show.values = T, transform = NULL, value.offse
 
 ## Goodness of fit
 
+```{r final rootogram,fig.cap = "\\label{fig:final_model_rootogram} Rootogram of Negative Binomial Hurdle Model with reduced variables", fig.width = 10, fig.align = "center", fig.pos = "H"}
+rootogram(final_hurdle_model_nb, max=max(data10$time_at_shelter))
+```
+
+The final model provides an adequate fit to the data. It has the lowest AIC of `r round(AIC(final_hurdle_model_nb), 2)` and as seen from Figure \ref{fig:final_model_rootogram} fits most values well.
   
 # Conclusions {#sec:Conc}
+
+The model which provides the best fit to the data is one which includes animal type, intake type, outcome type and chip status as explanatory variables. Hence these factors are the most influential in determining the number of days an animal spends at the shelter before their final outcome is decided.
