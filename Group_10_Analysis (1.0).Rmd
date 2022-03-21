@@ -182,6 +182,11 @@ From Figure \ref{fig:outcome_bar}, some differences exist. The sample size of UN
 poisson_model <- glm(time_at_shelter ~ ., data = data10, family = "poisson")
 ```
 
+Since the response variable is count data, a Poisson model is fit to the data. The following formula is used to estimate the number of days spent at the shelter:
+
+$$ \hat{Y_i} = \hat{\mu_i} = n_iexp({\boldsymbol x_i^T\hat{\boldsymbol\beta}}) $$
+where $\hat{Y_i}$ is the expected number of days spent at the shelter, $\hat{\mu_i}$ is the mean, $n_i$ is the exposure, $\boldsymbol x_i$ denotes the matrix of covariates and $\hat{\boldsymbol \beta}$ is the matrix of coefficients. The subscript $i$ denotes the $i^{th}$ covariate pattern.
+
 ## Variable selection using AIC
 ```{r all subset variable selection using AIC for Poisson}
 step(poisson_model, direction = "both")
@@ -215,6 +220,11 @@ In Figure \ref{fig:poisson_rootogram}, the Poisson model is severely under-fitti
 
 # Formal Data Analysis——Fitting a Hurdle model
 ## Fitting a Binomial-Poisson hurdle model
+Now a Binomial-Poisson hurdle model is fit to the data. A Binomial model is first used to determine whether an animal will be admitted to the shelter or not. Once an animal is admitted to the shelter, the number of days spent there will be positive and can be estimated using the following formula:
+
+$$ \hat{Y_i} =  (1-\pi)\frac{\hat{\mu_i}}{1-exp(-\hat{\mu_i})}$$
+where $Y_i$ is the number of days spent at the shelter and $\mu_i$ is the mean. The subscript $i$ denotes the $i^{th}$ covariate pattern.
+
 ```{r Poisson Hurdle model}
 hurdle_model <- hurdle(time_at_shelter ~ ., data = data10, zero.dist = "binomial", dist = "poisson")
 summary(hurdle_model)
@@ -229,6 +239,11 @@ In Figure \ref{fig:binomial_hurdle_rootogram} counts 1,2 and 4 are being severel
 ```{r fit negative binomial hurdle model}
 hurdle_model_nb <- hurdle(time_at_shelter ~ ., data = data10, zero.dist = "binomial", dist = "negbin")
 ```
+
+The Binomial-Negative binomial hurdle model works in a similar way to the Binomial-Poisson hurdle model. Once an animal is admitted to the shelter, the number of days spent there will be positive and can be estimated using the following formula:
+
+$$ \hat{Y_i} = (1-\pi)\frac{\hat{\mu_i}}{1-(1+\alpha\hat{\mu_i})^{-1/\alpha}} $$
+where $Y_i$ is the number of days spent at the shelter, $\mu_i$ is the mean and $\alpha$ is ?. The subscript $i$ denotes the $i^{th}$ covariate pattern.
 
 ```{r negative binomial hurdle rootogram,fig.cap = "\\label{fig:negative_binomial_hurdle_rootogram} Rootogram of the Negative Binomial Hurdle Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
 rootogram(hurdle_model_nb, max = max(data10$time_at_shelter))
