@@ -196,7 +196,7 @@ summary(poisson_model)
 ```{r Poisson model CI plots, fig.cap = "\\label{fig:poisson_CIs} Confidence Intervals of the Poisson Model", fig.width = 10, fig.height = 7, fig.align = "center", fig.pos = "H"}
 plot_model(poisson_model, show.values = T, transform = NULL, value.offset = 0.4, value.size = 5, dot.size = 3)
 ```
-From Figure \ref{fig:poisson_CIs}, comparing with the baseline categories, according to the p-values. All the levels of the categorical variables intake type, outcome type and chip status are significant. Two levels are significant in the factor animal type and one is insignificant. Five out of eleven categories of month are significant and the others are not.
+Figure \ref{fig:poisson_CIs} displays the confidence intervals for each level of each categorical variable in comparison to the respective baseline category. All the levels of the categorical variables intake type, outcome type and chip status are significant. Two levels are significant in the factor animal type and one is insignificant. Five out of eleven categories of month are significant and the others are not.
 
 ## Goodness of fit and overdispersion for the Poisson model
 ```{r Deviance and Chi-squared goodness-of-fit test}
@@ -252,7 +252,7 @@ summary(hurdle_model_nb_2)
 ```{r negative binomial hurdle model CI plots, fig.cap = "\\label{fig:hurdle_CIs} Confidence Intervals of the Negative Binomial Hurdle Model", fig.width = 10, fig.height = 8, fig.align = "center", fig.pos = "H"}
 plot_model(hurdle_model_nb_2, show.values = T, transform = NULL, value.offset = 0.4, value.size = 5, dot.size = 3)
 ```
-From Figure \ref{fig:hurdle_CIs}, comparing with the baseline categories, according to the p-values. 
+Figure \ref{fig:hurdle_CIs} displays the confidence intervals for each level of each categorical variable in comparison to the respective baseline category. 
 In the Binomial model, all the levels of the categorical variables intake type and outcome type are significant, while all the levels of the categorical variables animal type and chip status are insignificant.
 In the Truncated Poisson model, all the levels  of the categorical variable intake type are significant and all the levels of animal type are insignificant.
 
