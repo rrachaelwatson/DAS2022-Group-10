@@ -187,8 +187,8 @@ $$ Y_i \sim Poi(\mu_i) $$
 
 The following formula is then used to estimate the number of days spent at the shelter:
 
-$$ log(\hat{Y_i}) = log(\hat{\mu_i}) = log(n_i) + \sum_{j=1}^{5} x_{ij}\hat{\beta_j} $$
-where $\hat{Y_i}$ is the expected number of days spent at the shelter from exposure $n_i$. $\hat{\mu_i}$ is the expected mean, $x_{ij}$ is the $j^{th}$ covariate, where $j=1,...,5$, and $\hat{\beta_j}$ is the coefficient of covariate $j$.
+$$ log(\hat{Y_i}) = log(\hat{\mu_i}) = log(n_i) + \sum_{j=1}^{k} x_{ij}\hat{\beta_j} $$
+where $\hat{Y_i}$ is the expected number of days spent at the shelter from exposure $n_i$. $\hat{\mu_i}$ is the expected mean, $x_{ij}$ is the $j^{th}$ covariate, where $j=1,...,k$, and $\hat{\beta_j}$ is the coefficient of covariate $j$. $k$ equals the number of all the covariates used to fit the model.
 
 ## Variable selection using AIC
 ```{r all subset variable selection using AIC for Poisson}
@@ -201,7 +201,7 @@ Using AIC as a selection criteria, the model with the minimum AIC is selected an
 summary(poisson_model)
 ```
 
-```{r Poisson model CI plots, fig.cap = "\\label{fig:poisson_CIs} Confidence Intervals of the Poisson Model", fig.width = 10, fig.height = 7, fig.align = "center", fig.pos = "H"}
+```{r Poisson model CI plots, fig.cap = "\\label{fig:poisson_CIs} Confidence Intervals of the Poisson Model", fig.width = 10, fig.height = 10, fig.align = "center", fig.pos = "H"}
 plot_model(poisson_model, show.values = T, transform = NULL, value.offset = 0.4, value.size = 5, dot.size = 3)
 ```
 Figure \ref{fig:poisson_CIs} displays the confidence intervals for each level of each categorical variable in comparison to the respective baseline category. All the levels of the categorical variables intake type, outcome type and chip status are significant. Two levels are significant in the factor animal type and one is insignificant. Five out of eleven categories of month are significant and the others are not.
@@ -230,22 +230,18 @@ where $p_i$ is the probability that an animal will be admitted to the shelter.
 
 The log-odds are then:
 
-$$ log(\frac{p_i}{1-p_i}) = \beta_0 + \sum_{j=1}^{5}\beta_jx_{ij} $$
-where $\beta_0$ is the intercept term and $\beta_j$ is the coefficient of the $j^{th}$ covariate, $x_{ij}$, with $j=1,...5$.
+$$ log(\frac{p_i}{1-p_i}) = \sum_{j=1}^{k}\beta_jx_{ij} $$
+where $\beta_j$ is the coefficient of the $j^{th}$ covariate, $x_{ij}$, with $j=1,...k$. $k$ equals the number of all the covariates used to fit the model.
 
-Once an animal is admitted to the shelter, a Poisson model is fit to the data: 
-
-$$ Y_i \sim Poi(\mu_i) $$
-
-The number of days spent at the shelter will be positive and can be estimated using the following formula:
+Once an animal is admitted to the shelter, a truncated Poisson model is fit to the data. The number of days spent at the shelter will be positive and can be estimated using the following formula:
 
 $$ \hat{Y_i} =  (1-p_i)\frac{\hat{\mu_i}}{1-exp(-\hat{\mu_i})}$$
 where $\hat{Y_i}$ is the number of days spent at the shelter, $\hat{\mu_i}$ is the expected mean and $p_i$ is the probability that an animal will be admitted to the shelter.
 
 The value of $log(\hat{\mu_i})$ can be found using:
 
-$$ log(\hat{\mu_i}) = \hat{\beta_0} + \sum_{j=1}^{5} \hat{\beta_j}x_{ij}$$
-where $j = 1,...,5$ represents the $j^{th}$ covariate, $\hat{\beta_0}$ denotes the intercept term and $\hat{\beta_j}$ is the coefficient of the $j^{th}$ explanatory variable, $x_{ij}$.
+$$ log(\hat{\mu_i}) =\sum_{j=1}^{k} \hat{\beta_j}x_{ij}$$
+where $j = 1,...,k$ represents the $j^{th}$ covariate, $\hat{\beta_0}$ denotes the intercept term and $\hat{\beta_j}$ is the coefficient of the $j^{th}$ explanatory variable, $x_{ij}$. $k$ equals the number of all the covariates used to fit the model.
 
 ```{r Poisson Hurdle model}
 hurdle_model <- hurdle(time_at_shelter ~ ., data = data10, zero.dist = "binomial", dist = "poisson")
@@ -262,18 +258,15 @@ In Figure \ref{fig:binomial_hurdle_rootogram} counts 1,2 and 4 are being severel
 hurdle_model_nb <- hurdle(time_at_shelter ~ ., data = data10, zero.dist = "binomial", dist = "negbin")
 ```
 
-The Binomial-Negative Binomial hurdle model works in a similar way to the Binomial-Poisson hurdle model. However, once an animal is admitted to the shelter, a Negative Binomial model is fit instead.
-$$ Y_i \sim NegBin(k, q_i) $$
-
-The number of days spent at the shelter can then be estimated using the following formula:
+The Binomial-Negative Binomial hurdle model works in a similar way to the Binomial-Poisson hurdle model. However, once an animal is admitted to the shelter, a truncated Negative Binomial model is fit instead.The number of days spent at the shelter can then be estimated using the following formula:
 
 $$ \hat{Y_i} = (1-p_i)\frac{\hat{\mu_i}}{1-(1+\alpha\hat{\mu_i})^{-1/\alpha}} $$
 where $\hat{Y_i}$ is the number of days spent at the shelter, $\hat{\mu_i}$ is the expected mean, $p_i$ is the probability that an animal will be admitted to the shelter and $\alpha (\geq 0)$ is the dispersion parameter that is assumed not to depend on covariates.
 
 The value of $log(\hat{\mu_i})$ can be found using:
 
-$$ log(\hat{\mu_i}) = \hat{\beta_0} + \sum_{j=1}^{5} \hat{\beta_j}x_{ij}$$
-where $j = 1,...,5$ represents the $j^{th}$ covariate, $\hat{\beta_0}$ denotes the intercept term and $\hat{\beta_j}$ is the coefficient of the $j^{th}$ explanatory variable, $x_{ij}$.
+$$ log(\hat{\mu_i}) =\sum_{j=1}^{k} \hat{\beta_j}x_{ij}$$
+where $j = 1,...,k$ represents the $j^{th}$ covariate, $\hat{\beta_0}$ denotes the intercept term and $\hat{\beta_j}$ is the coefficient of the $j^{th}$ explanatory variable, $x_{ij}$. $k$ equals the number of all the covariates used to fit the model.
 
 ```{r negative binomial hurdle rootogram,fig.cap = "\\label{fig:negative_binomial_hurdle_rootogram} Rootogram of the Negative Binomial Hurdle Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
 rootogram(hurdle_model_nb, max = max(data10$time_at_shelter))
@@ -294,7 +287,7 @@ hurdle_model_nb_2 <- hurdle(time_at_shelter ~ animal_type + intake_type + outcom
 summary(hurdle_model_nb_2)
 ```
 
-```{r negative binomial hurdle model CI plots, fig.cap = "\\label{fig:hurdle_CIs} Confidence Intervals of the Negative Binomial Hurdle Model", fig.width = 10, fig.height = 8, fig.align = "center", fig.pos = "H"}
+```{r negative binomial hurdle model CI plots, fig.cap = "\\label{fig:hurdle_CIs} Confidence Intervals of the Negative Binomial Hurdle Model", fig.width = 10, fig.height = 11, fig.align = "center", fig.pos = "H"}
 plot_model(hurdle_model_nb_2, show.values = T, transform = NULL, value.offset = 0.4, value.size = 5, dot.size = 3)
 ```
 Figure \ref{fig:hurdle_CIs} displays the confidence intervals for each level of each categorical variable in comparison to the respective baseline category. 
@@ -322,11 +315,25 @@ The final model provides an adequate fit to the data. It has the lowest AIC of `
 Coefs <- round(coef(final_hurdle_model_nb), 2)
 ```
   
-The time spent at the shelter can then be estimated using:
-$$ log(\hat{Y_i}) = log(\hat{\mu_i}) = `r Coefs[1]` + `r Coefs[2]` \cdot x_{i1} + `r Coefs[3]` \cdot x_{i2} + `r Coefs[4]` \cdot x_{i3} $$
-where $Y_i$ is the time spent at the shelter, $x_{i1}$ is the intake type, $x_{i2}$ is the outcome type, $x_{i3}$ is the chip status of the $i^{th}$ animal.
+If a animal is admitted to the shelter, the time spent at the shelter can then be estimated using:
+$$ 
+\begin{split}
+log(\hat{Y_i}) = log(\hat{\mu_i}) &= `r Coefs[1]` + `r Coefs[2]` \cdot I(owner ~surrednder) + `r Coefs[3]` \cdot I(stray) \\
+&+ `r Coefs[4]` \cdot I(died)+ `r Coefs[5]` \cdot I(euthanized)+ `r Coefs[6]` \cdot I(foster) \\
+&+ `r Coefs[7]` \cdot I(returned to owner)+ `r Coefs[8]` \cdot I(scan no chip)+ `r Coefs[9]` \cdot I(unable to scan)
+\end{split}
+$$
+where $Y_i$ is the time spent at the shelter, `r Coefs[1]` is the sum of the coefficients for the baseline categories of every factor.
+$I()$ is the indicator function:
+$$ I(A)=\left\{
+\begin{array}{rcl}
+1 & & if~a \in A\\
+0 & & if~a \notin A
+\end{array} \right.$$
+where $a$ is the animal.
 
-            
+The coefficients stand for the multiplicative effect. For example, keeping other variables unchanged and comparing with the baseline category, if an animal belongs to $owner~surrednder$, the time spent at the shelter will be multiplied by $exp^{`r Coefs[2]`}$.
+
   
 # Conclusions {#sec:Conc}
 Due to the excess zeroes present in the data, the Poisson model is not a suitable fit to the data. The model which provides the best fit to the data is the negative binomial Hurdle model which includes intake type, outcome type and chip status as explanatory variables. Hence these factors are the most influential in determining the number of days an animal spends at the shelter before its final outcome is decided.
