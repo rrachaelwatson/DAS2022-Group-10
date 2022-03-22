@@ -182,10 +182,13 @@ From Figure \ref{fig:outcome_bar}, some differences exist. The sample size of UN
 poisson_model <- glm(time_at_shelter ~ ., data = data10, family = "poisson")
 ```
 
-Since the response variable is count data, a Poisson model is fit to the data. The following formula is used to estimate the number of days spent at the shelter:
+Since the response variable is count data, a Poisson model is fit to the data. The response variables, $Y_i$, are assumed to be independently, identically distributed, following a Poisson distribution:
+$$ Y_i \sim Poi(\mu_i) $$
 
-$$ \hat{Y_i} = \hat{\mu_i} = n_iexp({\boldsymbol x_i^T\hat{\boldsymbol\beta}}) $$
-where $\hat{Y_i}$ is the expected number of days spent at the shelter from exposure $n_i$. $\hat{\mu_i}$ is the expected mean, $\boldsymbol x_i$ denotes the matrix of covariates and $\hat{\boldsymbol \beta}$ is the matrix of coefficients. The subscript $i$ denotes the $i^{th}$ covariate pattern.
+The following formula is then used to estimate the number of days spent at the shelter:
+
+$$ log(\hat{Y_i}) = log(\hat{\mu_i}) = log(n_i) + \sum_{j=1}^{5} x_{ij}\hat{\beta_j} $$
+where $\hat{Y_i}$ is the expected number of days spent at the shelter from exposure $n_i$. $\hat{\mu_i}$ is the expected mean, $x_{ij}$ is the $j^{th}$ covariate, where $j=1,...,5$, and $\hat{\beta_j}$ is the coefficient of covariate $j$.
 
 ## Variable selection using AIC
 ```{r all subset variable selection using AIC for Poisson}
@@ -220,19 +223,36 @@ In Figure \ref{fig:poisson_rootogram}, the Poisson model is severely under-fitti
 
 # Formal Data Analysis——Fitting a Hurdle model
 ## Fitting a Binomial-Poisson hurdle model
-Now a Binomial-Poisson hurdle model is fit to the data. A Binomial model is first used to determine whether an animal will be admitted to the shelter or not. Once an animal is admitted to the shelter, a Poisson model is fit and the number of days spent there will be positive and can be estimated using the following formula:
+Now a Binomial-Poisson hurdle model is fit to the data. A Binomial model is first used to determine whether an animal will be admitted to the shelter or not. Assuming the response variables, $Y_i$ are independently, identically distributed:
+
+$$ Y_i \sim Bin(n_i, p_i) $$
+where $p_i$ is the probability that an animal will be admitted to the shelter.
+
+The log-odds are then:
+
+$$ log(\frac{p_i}{1-p_i}) = \beta_0 + \sum_{j=1}^{5}\beta_jx_{ij} $$
+where $\beta_0$ is the intercept term and $\beta_j$ is the coefficient of the $j^{th}$ covariate, $x_{ij}$, with $j=1,...5$.
+
+Once an animal is admitted to the shelter, a Poisson model is fit to the data: 
+
+$$ Y_i \sim Poi(\mu_i) $$
+
+The number of days spent at the shelter will be positive and can be estimated using the following formula:
 
 $$ \hat{Y_i} =  (1-p_i)\frac{\hat{\mu_i}}{1-exp(-\hat{\mu_i})}$$
-where $\hat{Y_i}$ is the number of days spent at the shelter, $\hat{\mu_i}$ is the expected mean and $p_i$ is the probability that an animal will be admitted to the shelter. The subscript $i$ denotes the $i^{th}$ covariate pattern.
+where $\hat{Y_i}$ is the number of days spent at the shelter, $\hat{\mu_i}$ is the expected mean and $p_i$ is the probability that an animal will be admitted to the shelter.
 
-$$ g(p_i) = log(\frac{p_i}{1-p_i}) = \beta_0 + \beta_1x_i $$
+The value of $log(\hat{\mu_i})$ can be found using:
+
+$$ log(\hat{\mu_i}) = \hat{\beta_0} + \sum_{j=1}^{5} \hat{\beta_j}x_{ij}$$
+where $j = 1,...,5$ represents the $j^{th}$ covariate, $\hat{\beta_0}$ denotes the intercept term and $\hat{\beta_j}$ is the coefficient of the $j^{th}$ explanatory variable, $x_{ij}$.
 
 ```{r Poisson Hurdle model}
 hurdle_model <- hurdle(time_at_shelter ~ ., data = data10, zero.dist = "binomial", dist = "poisson")
 summary(hurdle_model)
 ```
 
-```{r Poisson hurdle rootogram,fig.cap = "\\label{fig:binomial_hurdle_rootogram} Rootogram of the Binomial Hurdle Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
+```{r Poisson hurdle rootogram,fig.cap = "\\label{fig:binomial_hurdle_rootogram} Rootogram of the Poisson Hurdle Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
 rootogram(hurdle_model, max = max(data10$time_at_shelter))
 ```
 In Figure \ref{fig:binomial_hurdle_rootogram} counts 1,2 and 4 are being severely under-fitted, while 6-9 are being over-fitted. There is also under-fitting at the higher counts which suggests over-dispersion. Therefore, a negative binomial hurdle model shall be fitted to address this. 
@@ -242,20 +262,23 @@ In Figure \ref{fig:binomial_hurdle_rootogram} counts 1,2 and 4 are being severel
 hurdle_model_nb <- hurdle(time_at_shelter ~ ., data = data10, zero.dist = "binomial", dist = "negbin")
 ```
 
-The Binomial-Negative Binomial hurdle model works in a similar way to the Binomial-Poisson hurdle model. However, once an animal is admitted to the shelter, a Negative Binomial model is fit instead. The number of days spent at the shelter can then be estimated using the following formula:
+The Binomial-Negative Binomial hurdle model works in a similar way to the Binomial-Poisson hurdle model. However, once an animal is admitted to the shelter, a Negative Binomial model is fit instead.
+$$ Y_i \sim NegBin(k, q_i) $$
+
+The number of days spent at the shelter can then be estimated using the following formula:
 
 $$ \hat{Y_i} = (1-p_i)\frac{\hat{\mu_i}}{1-(1+\alpha\hat{\mu_i})^{-1/\alpha}} $$
-where $\hat{Y_i}$ is the number of days spent at the shelter, $\hat{\mu_i}$ is the expected mean, $p_i$ is the probability that an animal will be admitted to the shelter and $\alpha (\geq 0)$ is the dispersion parameter that is assumed not to depend on covariates. The subscript $i$ denotes the $i^{th}$ covariate pattern.
+where $\hat{Y_i}$ is the number of days spent at the shelter, $\hat{\mu_i}$ is the expected mean, $p_i$ is the probability that an animal will be admitted to the shelter and $\alpha (\geq 0)$ is the dispersion parameter that is assumed not to depend on covariates.
 
 The value of $log(\hat{\mu_i})$ can be found using:
 
-$$ log(\hat{\mu_i}) = \sum_{j=1}^{k} x_{ij}\hat{\beta_j} + \hat{\beta_0}$$
-where $j = 1,...,k$ represents the $j^{th}$ covariate, $\hat{\beta_0}$ denotes the intercept term and $\hat{\beta_j}$ is the coefficient of the $j^{th}$ explanatory variable, $x_{ij}$.
+$$ log(\hat{\mu_i}) = \hat{\beta_0} + \sum_{j=1}^{5} \hat{\beta_j}x_{ij}$$
+where $j = 1,...,5$ represents the $j^{th}$ covariate, $\hat{\beta_0}$ denotes the intercept term and $\hat{\beta_j}$ is the coefficient of the $j^{th}$ explanatory variable, $x_{ij}$.
 
 ```{r negative binomial hurdle rootogram,fig.cap = "\\label{fig:negative_binomial_hurdle_rootogram} Rootogram of the Negative Binomial Hurdle Model", fig.width = 10, fig.align = "center", fig.pos = "H"}
 rootogram(hurdle_model_nb, max = max(data10$time_at_shelter))
 ```
-The AIC of the binomial hurdle model is `r format(round(AIC(hurdle_model)), scientific=FALSE)` and the AIC of the negative binomial hurdle model is `r round(AIC(hurdle_model_nb))`. From this, the negative binomial model shows a much better fit to the data. However, in Figure \ref{fig:negative_binomial_hurdle_rootogram} some values are still being under-fitted.
+The AIC of the Poisson hurdle model is `r format(round(AIC(hurdle_model)), scientific=FALSE)` and the AIC of the Negative Binomial hurdle model is `r round(AIC(hurdle_model_nb))`. From this, the Negative Binomial model shows a much better fit to the data. However, in Figure \ref{fig:negative_binomial_hurdle_rootogram} some values are still being under-fitted.
 
 ## Variable selection using AIC for negative binomial hurdle model
 ```{r all subset variable selection using AIC}
@@ -294,6 +317,16 @@ From Figure \ref{fig:final_hurdle_CIs}, according to the p-value of each categor
 rootogram(final_hurdle_model_nb, style = "standing", max=max(data10$time_at_shelter))
 ```
 The final model provides an adequate fit to the data. It has the lowest AIC of `r round(AIC(final_hurdle_model_nb), 2)` and as seen from Figure \ref{fig:final_model_rootogram}, the model, represented by the red line, fits most of the values of the count data well.
+
+```{r}
+Coefs <- round(coef(final_hurdle_model_nb), 2)
+```
+  
+The time spent at the shelter can then be estimated using:
+$$ log(\hat{Y_i}) = log(\hat{\mu_i}) = `r Coefs[1]` + `r Coefs[2]` \cdot x_{i1} + `r Coefs[3]` \cdot x_{i2} + `r Coefs[4]` \cdot x_{i3} $$
+where $Y_i$ is the time spent at the shelter, $x_{i1}$ is the intake type, $x_{i2}$ is the outcome type, $x_{i3}$ is the chip status of the $i^{th}$ animal.
+
+            
   
 # Conclusions {#sec:Conc}
 Due to the excess zeroes present in the data, the Poisson model is not a suitable fit to the data. The model which provides the best fit to the data is the negative binomial Hurdle model which includes intake type, outcome type and chip status as explanatory variables. Hence these factors are the most influential in determining the number of days an animal spends at the shelter before its final outcome is decided.
