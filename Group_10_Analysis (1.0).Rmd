@@ -318,9 +318,9 @@ Coefs <- round(coef(final_hurdle_model_nb), 2)
 If a animal is admitted to the shelter, the time spent at the shelter can then be estimated using:
 $$ 
 \begin{split}
-log(\hat{Y_i}) = log(\hat{\mu_i}) &= `r Coefs[1]` + `r Coefs[2]` \cdot I(owner ~surrednder) + `r Coefs[3]` \cdot I(stray) \\
+log(\hat{Y_i}) = log(\hat{\mu_i}) &= `r Coefs[1]` + `r Coefs[2]` \cdot I(owner ~surrender) + `r Coefs[3]` \cdot I(stray) \\
 &+ `r Coefs[4]` \cdot I(died)+ `r Coefs[5]` \cdot I(euthanized)+ `r Coefs[6]` \cdot I(foster) \\
-&+ `r Coefs[7]` \cdot I(returned to owner)+ `r Coefs[8]` \cdot I(scan no chip)+ `r Coefs[9]` \cdot I(unable to scan)
+&+ `r Coefs[7]` \cdot I(returned ~to~ owner)+ `r Coefs[8]` \cdot I(scan ~no~ chip)+ `r Coefs[9]` \cdot I(unable~ to~ scan)
 \end{split}
 $$
 where $Y_i$ is the time spent at the shelter, `r Coefs[1]` is the sum of the coefficients for the baseline categories of every factor.
@@ -332,7 +332,7 @@ $$ I(A)=\left\{
 \end{array} \right.$$
 where $a$ is the animal.
 
-The coefficients stand for the multiplicative effect. For example, keeping other variables unchanged and comparing with the baseline category, if an animal belongs to $owner~surrednder$, the time spent at the shelter will be multiplied by $exp^{`r Coefs[2]`}$.
+The coefficients stand for the multiplicative effect. For example, keeping other variables unchanged and comparing with the baseline category, if an animal belongs to $owner~surrender$, the time spent at the shelter will be multiplied by $exp^{`r Coefs[2]`}$.
 
   
 # Conclusions {#sec:Conc}
