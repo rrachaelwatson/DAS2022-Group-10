@@ -292,7 +292,7 @@ plot_model(hurdle_model_nb_2, show.values = T, transform = NULL, value.offset = 
 ```
 Figure \ref{fig:hurdle_CIs} displays the confidence intervals for each level of each categorical variable in comparison to the respective baseline category. 
 In the Binomial model, all the levels of the categorical variables intake type and outcome type are significant, while all the levels of the categorical variables animal type and chip status are insignificant.
-In the Truncated Poisson model, all the levels  of the categorical variable intake type are significant and all the levels of animal type are insignificant.
+In the Truncated Negative Binomial model, all the levels  of the categorical variable intake type are significant and all the levels of animal type are insignificant.
 
 Since the variable animal type is not significant for the model, animal type is removed to fit a new model.
 ```{r new negative binomial hurdle model remove animal type}
